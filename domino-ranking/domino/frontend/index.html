@@ -1,0 +1,1160 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dominó Ranking</title>
+<link rel="icon" type="image/png" href="favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Alfa+Slab+One&family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --felt:#161616; --felt-2:#0d0d0d; --ivory:#f4f4f2; --ivory-2:#e6e6e3; --paper:#ffffff;
+    --ink:#111111; --ink-2:#555555; --pip:#c9a227; --line:#cfcfcc; --ok:#8a6a0f; --bad:#444444;
+    --gold:#c9a227; --gold-d:#8a6a0f; --gold-l:#e6c65c; --gray:#6b6b6b;
+    --head:"Alfa Slab One", Georgia, "Times New Roman", serif;
+    --body:"Source Sans 3", "Segoe UI", system-ui, sans-serif;
+  }
+  * { box-sizing:border-box; }
+  html { -webkit-text-size-adjust:100%; }
+  body { margin:0; font:16px/1.45 var(--body); color:var(--ink); background-color:var(--felt);
+         background-image:radial-gradient(rgba(201,162,39,.10) 1px, transparent 1px); background-size:9px 9px; }
+  button, input, select { font:inherit; color:inherit; }
+  :focus-visible { outline:3px solid var(--pip); outline-offset:2px; }
+  [hidden] { display:none !important; }
+
+  /* ---------- cabecera ---------- */
+  .top { background:#000; color:#fff; border-bottom:3px solid var(--gold); }
+  .top-in { max-width:1040px; margin:0 auto; padding:14px 16px 0; }
+  .brand { display:flex; flex-wrap:wrap; gap:12px 20px; align-items:center; justify-content:space-between; }
+  .brand h1 { margin:0; color:#fff; font:400 1.6rem/1 var(--head); display:flex; align-items:center; gap:12px; letter-spacing:.01em; }
+  .top-right { display:flex; flex-wrap:wrap; gap:8px 18px; align-items:center; }
+  .meta a { color:var(--ink); font-weight:600; text-decoration:underline; text-decoration-color:var(--gold); text-underline-offset:3px; } .meta a:hover { color:var(--gold-d); }
+  .ig-link { color:#fff; text-decoration:none; font-size:.9rem; border:1.5px solid var(--gold); border-radius:99px; padding:5px 14px; }
+  .ig-link b { color:var(--gold-l); } .ig-link:hover { background:var(--gold); color:#111; } .ig-link:hover b { color:#111; }
+  .admin { font-size:.85rem; color:#bdbdbd; display:flex; align-items:center; gap:8px; }
+  .admin input { width:170px; background:#1f1f1f; border:1.5px solid #555; color:#fff; border-radius:8px; padding:6px 9px; }
+  nav { display:flex; gap:6px; margin-top:14px; overflow-x:auto; padding-bottom:0; }
+  nav button { flex:none; background:#1f1f1f; color:#e8e8e8; border:2px solid #444; border-bottom:0;
+               border-radius:10px 10px 0 0; padding:9px 16px; cursor:pointer; font-weight:600; }
+  nav button:hover { border-color:var(--gold); }
+  nav button.active { background:#fff; color:#000; border-color:var(--gold); box-shadow:inset 0 3px 0 var(--gold); }
+  main { max-width:1040px; margin:0 auto; padding:22px 16px 80px; }
+
+  /* ---------- piezas de dominó ---------- */
+  .pips { display:grid; grid-template-columns:repeat(3,1fr); grid-template-rows:repeat(3,1fr); gap:3px; width:46px; height:46px; }
+  .pips i { border-radius:50%; }
+  .pips i.on { background:var(--ink); }
+  .pips.red i.on { background:var(--pip); }
+  .brand-logo { width:60px; height:60px; border-radius:50%; flex:none; box-shadow:0 0 0 2px var(--gold); }
+  .logo { display:inline-flex; border:2px solid var(--ivory); border-radius:8px; overflow:hidden; }
+  .logo .pips { width:22px; height:22px; margin:5px; gap:2px; }
+  .logo .pips i.on { background:var(--ivory); }
+  .logo .pips + .pips { }
+  .logo span + span { border-left:2px solid var(--ivory); }
+
+  /* ---------- tarjetas ---------- */
+  .card { background:var(--ivory); border:2px solid var(--ink); border-radius:12px; box-shadow:0 4px 0 var(--ink);
+          padding:18px; margin-bottom:22px; }
+  .card > h2, .card > .head h2 { margin:0 0 12px; font:400 1.2rem/1.2 var(--head); }
+  .head { display:flex; flex-wrap:wrap; gap:8px 14px; align-items:baseline; justify-content:space-between; margin-bottom:6px; }
+  h3 { font:400 1rem/1.2 var(--head); margin:18px 0 8px; }
+  .muted { color:var(--ink-2); }
+  .small { font-size:.88rem; }
+  .row { display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin-bottom:10px; }
+  .row > input, .row > select, .row > .ac { flex:1 1 150px; min-width:0; }
+  .row > .grow { flex:2 1 240px; }
+  label.f { display:flex; flex-direction:column; gap:3px; font-size:.85rem; font-weight:600; flex:1 1 150px; min-width:0; }
+  label.f input, label.f select { font-weight:400; }
+  input, select { background:var(--paper); border:1.5px solid var(--ink); border-radius:8px; padding:8px 10px; min-width:0; max-width:100%; }
+  input:disabled { background:var(--ivory-2); color:var(--ink-2); }
+  input[type=number]::-webkit-inner-spin-button { display:none; }
+  input[type=number] { -moz-appearance:textfield; }
+
+  .btn { background:var(--ink); color:var(--ivory); border:2px solid var(--ink); border-radius:8px; padding:8px 15px;
+         font-weight:700; cursor:pointer; }
+  .btn:hover { background:#333; }
+  .btn.pip { background:var(--gold); border-color:var(--ink); color:#111; }
+  .btn.pip:hover { background:var(--gold-l); }
+  .btn.ghost { background:transparent; color:var(--ink); }
+  .btn.ghost:hover { background:var(--ivory-2); }
+  .btn.danger { background:transparent; color:#333; border-color:#777; border-style:dashed; }
+  .btn.danger:hover { background:var(--ivory-2); border-color:#111; color:#111; }
+  .btn.sm { padding:4px 10px; font-size:.85rem; }
+  .btn:disabled { opacity:.45; cursor:not-allowed; }
+  .actions { display:flex; flex-wrap:wrap; gap:8px; margin:10px 0; }
+
+  .fin { display:block; font-size:.78rem; font-style:italic; font-weight:400; color:var(--gold-d); line-height:1.3; }
+  .feed-day { margin:18px 0 8px; font:400 1.1rem/1.2 var(--head); }
+  .feed-item { border-top:1px solid var(--line); padding:10px 0; }
+  .feed-item .meta { font-size:.82rem; color:var(--ink-2); margin-bottom:4px; }
+  .feed-row { display:flex; justify-content:space-between; align-items:baseline; gap:12px; padding:2px 0; }
+  .feed-row .tag { display:inline-block; min-width:58px; font-size:.72rem; font-weight:700; letter-spacing:.04em; text-transform:uppercase; }
+  .feed-row.w { font-weight:700; } .feed-row.w .tag { color:var(--gold-d); }
+  .feed-row.l { color:var(--ink-2); } .feed-row.d .tag { color:var(--ink-2); }
+  .feed-row .sc { font-variant-numeric:tabular-nums; font-weight:700; }
+  .feed-badge { background:var(--ink); color:var(--gold-l); border-radius:6px; padding:1px 8px; font-size:.75rem; font-weight:600; margin-right:6px; }
+  .posts { display:grid; grid-template-columns:repeat(auto-fill, minmax(260px, 1fr)); gap:16px; }
+  .post { background:var(--paper); border:2px solid var(--ink); border-radius:12px; overflow:hidden; display:flex; flex-direction:column; box-shadow:0 3px 0 var(--ink); }
+  .post img { width:100%; aspect-ratio:1/1; object-fit:cover; display:block; background:var(--ivory-2); border-bottom:2px solid var(--ink); }
+  .post .pb { padding:12px 14px 14px; display:flex; flex-direction:column; gap:6px; flex:1; }
+  .post h4 { margin:0; font:400 1.02rem/1.25 var(--head); }
+  .post p { margin:0; white-space:pre-line; overflow-wrap:anywhere; }
+  .post .acts { margin-top:auto; display:flex; gap:6px; flex-wrap:wrap; padding-top:6px; }
+  .ig-card { display:flex; flex-wrap:wrap; gap:10px 18px; align-items:center; justify-content:space-between; background:#111; color:#fff; border:2px solid var(--gold); border-radius:12px; padding:14px 16px; margin-bottom:16px; }
+  .ig-card b { color:var(--gold-l); }
+  .thumb { width:84px; height:84px; object-fit:cover; border:2px solid var(--ink); border-radius:8px; flex:none; }
+  .feed-social { display:flex; gap:12px; align-items:flex-start; }
+  textarea { background:var(--paper); border:1.5px solid var(--ink); border-radius:8px; padding:8px 10px; width:100%; font:inherit; min-height:90px; resize:vertical; }
+  .pend { font-size:.75rem; color:var(--ink-2); display:block; }
+  .chip {  display:inline-block; border:1.5px solid currentColor; border-radius:99px; padding:0 9px; font-size:.78rem; font-weight:600; line-height:1.5; margin-right:4px; white-space:nowrap; }
+  .chip.k-estudiante { color:#111; } .chip.k-egresado { color:#5a5a5a; } .chip.k-profesor { color:var(--gold-d); } .chip.k-externo { color:#8a8a8a; } .chip.k-sin_definir { color:var(--gold-d); border-style:dashed; }
+  .chip.s-draft { color:#8a8a8a; } .chip.s-active { color:var(--gold-d); } .chip.s-finished { color:#111; background:var(--gold-l); border-color:#111; }
+  .id { font-family:ui-monospace, Consolas, monospace; font-size:.8rem; color:var(--ink-2); }
+  .pos { color:var(--gold-d); font-weight:700; } .neg { color:var(--gray); font-weight:700; }
+  .link { color:var(--ink); font-weight:700; text-decoration:underline; text-decoration-color:var(--gold); text-underline-offset:3px; cursor:pointer; background:none; border:0; padding:0; text-align:left; }
+  .empty { padding:18px; text-align:center; color:var(--ink-2); border:2px dashed var(--line); border-radius:10px; }
+
+  /* ---------- tablas ---------- */
+  .table-wrap { overflow-x:auto; }
+  table { width:100%; border-collapse:collapse; }
+  th, td { text-align:left; padding:8px 8px; border-bottom:1px solid var(--line); white-space:nowrap; vertical-align:middle; }
+  th { background:var(--ivory-2); font-size:.82rem; font-weight:700; border-bottom:2px solid var(--ink); }
+  td.num, th.num { text-align:right; font-variant-numeric:tabular-nums; }
+  td.wrap { white-space:normal; }
+  tr.top3 td:first-child { font-weight:700; color:var(--gold-d); }
+  tr.top3 { background:linear-gradient(90deg, rgba(201,162,39,.16), transparent 70%); }
+
+  /* ---------- perfil ---------- */
+  .stats { display:grid; grid-template-columns:repeat(auto-fit, minmax(104px, 1fr)); gap:10px; margin:12px 0 4px; }
+  .stat { background:var(--paper); border:2px solid var(--ink); border-radius:10px; padding:8px 10px; text-align:center; }
+  .stat b { display:block; font:400 1.5rem/1.2 var(--head); }
+  .stat span { font-size:.78rem; font-weight:600; color:var(--ink-2); }
+
+  /* ---------- podio ---------- */
+  .podium { display:grid; grid-template-columns:repeat(3, 1fr); gap:14px; }
+  .ptile { background:var(--paper); border:2px solid var(--ink); border-radius:12px; box-shadow:0 4px 0 var(--ink); overflow:hidden; }
+  .ptop { display:flex; justify-content:center; padding:12px; border-bottom:2px solid var(--ink); }
+  .ptop .pips { width:54px; height:54px; }
+  .pbot { padding:10px 10px 12px; text-align:center; }
+  .pbot b { display:block; font:400 1.02rem/1.2 var(--head); margin:2px 0; overflow-wrap:anywhere; }
+  .pbot .lbl { font-size:.8rem; font-weight:700; color:var(--gold-d); }
+  @media (max-width:560px) { .podium { grid-template-columns:1fr; } }
+
+  /* ---------- partidas ---------- */
+  .match { display:grid; grid-template-columns:1fr auto 1fr; gap:10px 14px; align-items:center; padding:10px 12px;
+           background:var(--paper); border:1.5px solid var(--line); border-radius:10px; margin-bottom:8px; }
+  .match .side { overflow-wrap:anywhere; }
+  .match .side.a { text-align:right; }
+  .match .side.win { font-weight:700; }
+  .match .side small { display:block; color:var(--ink-2); font-weight:400; }
+  .match .tbd { color:var(--ink-2); font-style:italic; }
+  .match .mid { display:flex; flex-direction:column; align-items:center; gap:6px; }
+  .match .cap { font-size:.78rem; font-weight:700; color:var(--ink-2); }
+  .match.bye { opacity:.8; background:var(--ivory-2); }
+  .score { display:inline-flex; border:2px solid var(--ink); border-radius:9px; background:var(--paper); overflow:hidden; }
+  .score input { width:62px; border:0; border-radius:0; text-align:center; font:400 1.25rem var(--head); padding:7px 2px; background:transparent; }
+  .score input:focus-visible { outline-offset:-3px; }
+  .score .bar { width:2px; background:var(--ink); }
+  .score.big input { width:84px; font-size:1.6rem; padding:10px 2px; }
+  .mid .foot { display:flex; gap:6px; align-items:center; flex-wrap:wrap; justify-content:center; }
+  .mid .foot input[type=date] { padding:4px 6px; font-size:.85rem; }
+  @media (max-width:680px) {
+    .match { grid-template-columns:1fr; text-align:center; }
+    .match .side.a { text-align:center; }
+  }
+
+  /* ---------- autocompletado ---------- */
+  .ac { position:relative; }
+  .ac > input { width:100%; }
+  .ac-list { position:absolute; z-index:20; left:0; right:0; top:calc(100% + 3px); margin:0; padding:4px; list-style:none; background:var(--paper);
+             border:2px solid var(--ink); border-radius:10px; box-shadow:0 6px 0 rgba(0,0,0,.25); max-height:280px; overflow:auto; min-width:260px; }
+  .ac-list li { padding:7px 9px; border-radius:7px; cursor:pointer; display:flex; flex-wrap:wrap; gap:2px 10px; align-items:baseline; }
+  .ac-list li.sel, .ac-list li:hover { background:var(--ivory-2); }
+  .ac-list li.none { color:var(--ink-2); cursor:default; }
+  .ac-list .u { font-size:.8rem; color:var(--ink-2); }
+
+  /* ---------- ligas y torneos ---------- */
+  .cgrid { display:grid; grid-template-columns:repeat(auto-fill, minmax(280px, 1fr)); gap:14px; }
+  .cc { background:var(--paper); border:2px solid var(--ink); border-radius:12px; padding:14px; cursor:pointer; text-align:left; width:100%; box-shadow:0 3px 0 var(--ink); }
+  .cc:hover { background:#fff; border-color:var(--gold-d); transform:translateY(-1px); }
+  .cc h3 { margin:0 0 6px; font-size:1.05rem; }
+  .cc .meta { font-size:.88rem; color:var(--ink-2); margin-top:6px; }
+  details.phase { border-top:2px solid var(--ink); margin-top:14px; padding-top:4px; }
+  details.phase > summary { cursor:pointer; font:400 1rem var(--head); padding:8px 0; }
+  .phase-title { font:400 1.1rem var(--head); margin:22px 0 6px; }
+  .note { background:var(--ivory-2); border-left:5px solid var(--gold); padding:9px 12px; border-radius:6px; font-size:.92rem; margin:10px 0; }
+  .grid2 { display:grid; grid-template-columns:repeat(auto-fit, minmax(300px, 1fr)); gap:16px; }
+
+  /* ---------- diálogo y aviso ---------- */
+  dialog { border:2px solid var(--ink); border-radius:12px; background:var(--ivory); color:var(--ink); padding:20px; width:min(520px, 92vw); box-shadow:0 6px 0 var(--ink); }
+  dialog::backdrop { background:rgba(0,0,0,.72); }
+  dialog h2 { margin:0 0 12px; font:400 1.2rem var(--head); }
+  dialog .row:last-child { margin-bottom:0; justify-content:flex-end; }
+  .toast { position:fixed; left:50%; bottom:22px; transform:translate(-50%, 20px); background:var(--ink); color:var(--ivory); border:2px solid var(--ivory);
+           padding:10px 16px; border-radius:10px; max-width:min(560px, 92vw); opacity:0; pointer-events:none; transition:opacity .2s, transform .2s; z-index:50; font-weight:600; }
+  .toast.show { opacity:1; transform:translate(-50%, 0); }
+  .toast { border-color:var(--gold); }
+  .toast.err { background:#fff; border-color:#111; color:#111; box-shadow:0 0 0 3px var(--gold); }
+  .toast.err::before { content:"Aviso: "; font-weight:700; }
+  @media (prefers-reduced-motion: reduce) { .toast, .cc { transition:none; } .cc:hover { transform:none; } }
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="top-in">
+    <div class="brand">
+      <h1><img class="brand-logo" src="logo.png" alt="Dominó Universitario UCV" width="64" height="64"> Dominó Ranking</h1>
+      <div class="top-right">
+        <a class="ig-link" id="igTop" href="https://www.instagram.com/dominoucv/" target="_blank" rel="noopener noreferrer">Instagram <b>@dominoucv</b></a>
+        <label class="admin">Clave de administrador
+          <input id="adminKey" type="password" placeholder="solo para registrar" autocomplete="off">
+        </label>
+      </div>
+    </div>
+    <nav id="tabs" aria-label="Secciones">
+      <button data-tab="ranking" class="active">Ranking</button>
+      <button data-tab="news">Novedades</button>
+      <button data-tab="social">Redes</button>
+      <button data-tab="players">Jugadores</button>
+      <button data-tab="comps">Ligas y torneos</button>
+      <button data-tab="match">Registrar partida</button>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <!-- ======================= RANKING ======================= -->
+  <section id="tab-ranking">
+    <div class="card">
+      <div class="head"><h2>Ranking general</h2><span class="muted small">ELO: todos empiezan en 1000</span></div>
+      <div class="row">
+        <select id="rkCat"><option value="">Todas las categorías</option></select>
+        <select id="rkUni"><option value="">Todas las universidades</option></select>
+        <input id="rkCity" placeholder="Ciudad">
+        <input id="rkMin" type="number" min="0" placeholder="Mín. partidas" value="0">
+        <button class="btn" id="rkGo">Filtrar</button>
+      </div>
+      <div class="table-wrap"><table id="rkTable"></table></div>
+    </div>
+  </section>
+
+  <!-- ======================= NOVEDADES (público) ======================= -->
+  <section id="tab-news" hidden>
+    <div class="card">
+      <div class="head"><h2>Novedades</h2><span class="muted small">Últimas partidas, torneos y jugadores nuevos</span></div>
+      <div id="newsFeed"><div class="empty">Cargando…</div></div>
+    </div>
+  </section>
+
+  <!-- ======================= REDES ======================= -->
+  <section id="tab-social" hidden>
+    <div class="ig-card">
+      <span>Síguenos en Instagram <b>@dominoucv</b>: fotos, resultados y anuncios de cada jornada.</span>
+      <a class="btn pip" id="igBtn" href="https://www.instagram.com/dominoucv/" target="_blank" rel="noopener noreferrer">Abrir Instagram</a>
+    </div>
+    <div class="card">
+      <div class="head"><h2>Redes</h2><span class="muted small">Publicaciones y resumen de cada día</span></div>
+      <details id="spForm">
+        <summary class="btn ghost sm" style="display:inline-block;margin-bottom:10px" id="spSummary">Agregar publicación</summary>
+        <div class="row">
+          <label class="f"><span>Fecha de la publicación</span><input id="spDate" type="date"></label>
+          <label class="f grow"><span>Título (opcional)</span><input id="spTitle" maxlength="120" placeholder="Ej. Gran jornada del 1er torneo"></label>
+        </div>
+        <label class="f" style="margin-bottom:10px"><span>Resumen del día</span><textarea id="spSummary2" maxlength="2000" placeholder="Qué se publicó ese día: resultados, ganadores, anuncios…"></textarea></label>
+        <div class="row">
+          <label class="f grow"><span>Enlace a la publicación en Instagram (opcional)</span><input id="spLink" placeholder="https://www.instagram.com/p/…"></label>
+          <label class="f grow"><span>Imagen (JPG, PNG o WEBP)</span><input id="spFile" type="file" accept="image/jpeg,image/png,image/webp"></label>
+        </div>
+        <div class="row" id="spPreviewRow" hidden><img id="spPreview" class="thumb" alt="Vista previa"><button class="btn ghost sm" data-act="post-noimg" type="button">Quitar imagen</button></div>
+        <div class="actions"><button class="btn pip" data-act="post-save" id="spSave">Publicar</button><button class="btn ghost" data-act="post-cancel">Cancelar</button></div>
+        <p class="muted small" style="margin:0">La imagen se reduce automáticamente (máx. 1080 px) para que la página cargue rápido. Guardar requiere la clave de administrador si está configurada.</p>
+      </details>
+      <div id="postsBox"><div class="empty">Cargando…</div></div>
+    </div>
+  </section>
+
+  <!-- ======================= JUGADORES ======================= -->
+  <section id="tab-players" hidden>
+    <div class="card">
+      <h2>Nuevo jugador</h2>
+      <div class="row">
+        <label class="f grow">Nombre completo<input id="plName" placeholder="Nombre y apellido"></label>
+        <label class="f">Categoría<select id="plCat"></select></label>
+        <label class="f">Universidad <span class="muted small">(elige de la lista o escribe otra)</span><input id="plUni" list="uniList" placeholder="Ej. UCV, USB, ULA…" autocomplete="off"></label>
+      </div>
+      <div class="row">
+        <label class="f grow">Carrera, escuela o club (opcional)<input id="plCareer" placeholder="Ej. Derecho, EEPA, Dominoceros Los Ruices"></label>
+        <label class="f">Ciudad<input id="plCity" placeholder="Ciudad"></label>
+        <label class="f">País (2 letras)<input id="plCountry" maxlength="2" placeholder="VE"></label>
+        <button class="btn pip" id="plCreate" style="align-self:flex-end">Crear jugador</button>
+      </div>
+      <datalist id="uniList"></datalist>
+    </div>
+
+    <div class="card">
+      <h2>Buscar jugador</h2>
+      <div class="row">
+        <input id="plSearch" class="grow" placeholder="Nombre, apellido o ID (ej. DOM-000001)">
+        <button class="btn" id="plFind">Buscar</button>
+        <label class="small"><input type="checkbox" id="plInactive"> Mostrar eliminados</label>
+      </div>
+      <div class="table-wrap"><table id="plTable"></table></div>
+    </div>
+    <div class="card" id="plProfile" hidden></div>
+  </section>
+
+  <!-- ======================= LIGAS Y TORNEOS ======================= -->
+  <section id="tab-comps" hidden>
+    <div id="compList">
+      <div class="card">
+        <div class="head"><h2>Ligas y torneos</h2></div>
+        <details id="newComp">
+          <summary class="btn pip" style="display:inline-block;list-style:none">Crear liga o torneo</summary>
+          <div style="margin-top:14px">
+            <div class="row">
+              <label class="f grow">Nombre<input id="cName" placeholder="Ej. Copa Rectores 2026"></label>
+              <label class="f">Tipo<select id="cKind"><option value="torneo">Torneo</option><option value="liga">Liga</option></select></label>
+              <label class="f grow">Modalidad<select id="cFormat"></select></label>
+            </div>
+            <div class="row">
+              <label class="f grow">Sede (lugar)<input id="cLoc" placeholder="Ej. Aula Magna, Caracas"></label>
+              <label class="f">Fecha de inicio<input id="cDate" type="date"></label>
+              <label class="f">Se juega en<select id="cTeam"><option value="2">Parejas (2 jugadores)</option><option value="1">Individual (1 jugador)</option></select></label>
+            </div>
+            <div class="row">
+              <label class="f">Puntos por victoria<input id="cPW" type="number" min="1" max="10" value="3"></label>
+              <label class="f">Puntos por empate<input id="cPD" type="number" min="0" max="5" value="1"></label>
+              <label class="f">Partida a (puntos)<input id="cTarget" type="number" min="10" value="100"></label>
+              <label class="f" id="cSwissBox" hidden>Rondas suizas<input id="cSwiss" type="number" min="1" max="15" placeholder="Automático"></label>
+              <label class="f" id="cGroupsBox" hidden>Grupos<input id="cGroups" type="number" min="2" max="8" value="2"></label>
+              <label class="f" id="cQualBox" hidden><span id="cQualLbl">Clasifican</span><select id="cQual"></select></label>
+              <label class="f" id="cTieBox" hidden style="flex-direction:row;align-items:center;gap:8px"><input id="cOnlyTie" type="checkbox" style="width:auto"> La final se juega solo si hay empate por el 1.º lugar</label>
+            </div>
+            <div class="note" id="cHelp"></div>
+            <button class="btn pip" id="cCreate">Crear</button>
+          </div>
+        </details>
+      </div>
+      <div class="cgrid" id="cGrid"></div>
+    </div>
+    <div id="compDetail" hidden></div>
+  </section>
+
+  <!-- ======================= REGISTRAR PARTIDA ======================= -->
+  <section id="tab-match" hidden>
+    <div class="card">
+      <div class="head"><h2>Registrar partida</h2><span class="muted small">Las partidas de un torneo se registran dentro del torneo.</span></div>
+      <div class="row">
+        <label class="f grow">Liga<select id="mComp"></select></label>
+        <label class="f">Fecha<input id="mDate" type="date"></label>
+      </div>
+      <div class="grid2">
+        <div>
+          <h3 style="margin-top:6px">Pareja A</h3>
+          <div class="row"><span class="ac-slot" style="flex:1 1 100%"><input class="ac-in" id="mA1" placeholder="Jugador 1: escribe nombre o apellido"></span></div>
+          <div class="row"><span class="ac-slot" style="flex:1 1 100%"><input class="ac-in" id="mA2" placeholder="Jugador 2 (vacío si es 1 contra 1)"></span></div>
+        </div>
+        <div>
+          <h3 style="margin-top:6px">Pareja B</h3>
+          <div class="row"><span class="ac-slot" style="flex:1 1 100%"><input class="ac-in" id="mB1" placeholder="Jugador 1: escribe nombre o apellido"></span></div>
+          <div class="row"><span class="ac-slot" style="flex:1 1 100%"><input class="ac-in" id="mB2" placeholder="Jugador 2 (vacío si es 1 contra 1)"></span></div>
+        </div>
+      </div>
+      <div class="row" style="justify-content:center;margin-top:8px">
+        <span class="score big" role="group" aria-label="Marcador"><input id="mPA" type="number" min="0" placeholder="A" aria-label="Puntos pareja A"><span class="bar"></span><input id="mPB" type="number" min="0" placeholder="B" aria-label="Puntos pareja B"></span>
+      </div>
+      <div class="row" style="justify-content:center"><button class="btn pip" id="mSave">Guardar partida</button></div>
+      <div id="mResult"></div>
+    </div>
+    <div class="card">
+      <h2>Últimas partidas libres</h2>
+      <div class="table-wrap"><table id="freeTable"></table></div>
+    </div>
+  </section>
+</main>
+
+<!-- ======================= DIÁLOGOS ======================= -->
+<dialog id="dlgPlayer">
+  <form method="dialog" id="fPlayer">
+    <h2>Editar jugador <span class="id" id="dpId"></span></h2>
+    <div class="row"><label class="f grow">Nombre<input id="dpName"></label></div>
+    <div class="row">
+      <label class="f">Categoría<select id="dpCat"></select></label>
+      <label class="f grow">Universidad <span class="muted small">(elige de la lista o escribe otra)</span><input id="dpUni" list="uniList" autocomplete="off"></label>
+    </div>
+    <div class="row"><label class="f grow">Carrera, escuela o club<input id="dpCareer"></label></div>
+    <div class="row">
+      <label class="f grow">Ciudad<input id="dpCity"></label>
+      <label class="f">País<input id="dpCountry" maxlength="2"></label>
+    </div>
+    <div class="row"><button class="btn ghost" value="cancel">Cancelar</button><button class="btn pip" id="dpSave" value="ok">Guardar cambios</button></div>
+  </form>
+</dialog>
+
+<dialog id="dlgResult">
+  <form method="dialog">
+    <h2>Corregir resultado</h2>
+    <p class="muted small" id="drInfo" style="margin-top:-6px"></p>
+    <div class="row" style="justify-content:center"><span class="score big"><input id="drA" type="number" min="0" aria-label="Puntos A"><span class="bar"></span><input id="drB" type="number" min="0" aria-label="Puntos B"></span></div>
+    <div class="row"><label class="f">Fecha<input id="drDate" type="date"></label></div>
+    <div class="row"><button class="btn ghost" value="cancel">Cancelar</button><button class="btn pip" id="drSave" value="ok">Guardar resultado</button></div>
+  </form>
+</dialog>
+
+<dialog id="dlgComp">
+  <form method="dialog">
+    <h2>Editar datos</h2>
+    <div class="row"><label class="f grow">Nombre<input id="dcName"></label></div>
+    <div class="row"><label class="f grow">Sede (lugar)<input id="dcLoc"></label><label class="f">Fecha de inicio<input id="dcDate" type="date"></label></div>
+    <div class="row"><button class="btn ghost" value="cancel">Cancelar</button><button class="btn pip" id="dcSave" value="ok">Guardar cambios</button></div>
+  </form>
+</dialog>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+/* ===================================================================== utilidades */
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const fmt = (n) => Math.round(n);
+const CAT = { estudiante: "Estudiante", egresado: "Egresado", profesor: "Profesor", externo: "Externo", sin_definir: "Sin definir" };
+const STATUS = { draft: "Inscripción abierta", active: "En juego", finished: "Terminado" };
+const PLACE = { 1: "Campeón", 2: "Subcampeón", 3: "Tercer lugar" };
+const FORMAT_HELP = {
+  libre: "Tú registras las partidas cuando se jueguen. La tabla se ordena por puntos de liga.",
+  suizo: "Rondas por puntaje: en cada ronda se enfrentan los que van parejos, sin repetir rival. Si el número es impar, alguien descansa y cuenta como victoria.",
+  eliminacion: "Quien pierde queda fuera. Si no se completa la llave, los mejor sembrados pasan directo. Incluye partido por el tercer puesto.",
+  grupos_eliminacion: "Todos contra todos dentro de cada grupo. Los mejores de cada grupo pasan a una llave de eliminación directa.",
+  doble_eliminacion: "Hay que perder dos veces para quedar fuera: llave de ganadores, llave de perdedores y gran final.",
+  suizo_final: "Rondas suizas y después los mejores juegan semifinales, final y tercer puesto.",
+  suizo_gran_final: "Rondas suizas (desempate por average: puntos a favor − en contra) y una final entre el 1.º y el 2.º de la tabla. Puedes pedir que la final se juegue solo si hay empate por el primer lugar.",
+};
+const uniText = (r) => r.university || (r.category === "sin_definir" ? "Sin definir" : "—");
+const state = { compId: null, profileId: null, formats: [], universities: [] };
+
+const todayStr = () => { const d = new Date(); d.setMinutes(d.getMinutes() - d.getTimezoneOffset()); return d.toISOString().slice(0, 10); };
+const dateEs = (iso) => (iso ? iso.split("-").reverse().join("/") : "");
+const sign = (d) => (d == null ? "" : `<span class="${d >= 0 ? "pos" : "neg"}">${d >= 0 ? "+" : ""}${d.toFixed(1)}</span>`);
+
+async function api(path, opts = {}) {
+  const headers = { "Content-Type": "application/json" };
+  const key = $("#adminKey").value;
+  if (key) headers["X-Admin-Key"] = key;
+  let res;
+  try { res = await fetch("/api" + path, { ...opts, headers }); }
+  catch (e) { throw new Error("No se pudo conectar con el servidor. ¿Está encendido?"); }
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    let d = data.detail;
+    if (Array.isArray(d)) d = d.map((e) => (e.msg || "").replace(/^Value error, /, "")).join("; ");
+    throw new Error(d || "Error " + res.status);
+  }
+  return data;
+}
+const send = (method, path, body) => api(path, { method, body: body === undefined ? undefined : JSON.stringify(body) });
+
+let toastTimer;
+function toast(msg, err = false) {
+  const t = $("#toast");
+  t.textContent = msg;
+  t.className = "toast show" + (err ? " err" : "");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => (t.className = "toast"), err ? 6500 : 3200);
+}
+const run = (fn) => async (e) => { try { await fn(e); } catch (err) { toast(err.message, true); } };
+
+try { $("#adminKey").value = localStorage.getItem("adminKey") || ""; } catch (e) {}
+$("#adminKey").addEventListener("input", () => { try { localStorage.setItem("adminKey", $("#adminKey").value); } catch (e) {} });
+
+/* ----- fichas de dominó: puntos ----- */
+const PIPS = { 1: [5], 2: [1, 9], 3: [1, 5, 9], 4: [1, 3, 7, 9], 5: [1, 3, 5, 7, 9], 6: [1, 3, 4, 6, 7, 9] };
+const pips = (n, cls = "") =>
+  `<span class="pips ${cls}" aria-hidden="true">${[1, 2, 3, 4, 5, 6, 7, 8, 9].map((i) => `<i class="${(PIPS[n] || []).includes(i) ? "on" : ""}"></i>`).join("")}</span>`;
+
+/* ----- acciones por data-act (un solo escuchador de clics) ----- */
+const ACT = {};
+document.addEventListener("click", run(async (e) => {
+  const el = e.target.closest("[data-act]");
+  if (el && ACT[el.dataset.act]) await ACT[el.dataset.act](el, e);
+}));
+
+/* ===================================================================== autocompletado de jugadores */
+function setupAC(inp) {
+  inp.dataset.ac = "1";
+  inp.autocomplete = "off";
+  const wrap = document.createElement("div");
+  wrap.className = "ac";
+  inp.parentNode.insertBefore(wrap, inp);
+  wrap.appendChild(inp);
+  const list = document.createElement("ul");
+  list.className = "ac-list";
+  list.hidden = true;
+  list.setAttribute("role", "listbox");
+  wrap.appendChild(list);
+  let items = [], idx = -1, timer, seq = 0;
+
+  const close = () => { list.hidden = true; idx = -1; };
+  const mark = () => $$("li[data-i]", list).forEach((li, i) => li.classList.toggle("sel", i === idx));
+  const pick = (p) => {
+    inp.value = `${p.name} · ${p.public_id}`;
+    inp.dataset.id = p.public_id;
+    close();
+    inp.dispatchEvent(new CustomEvent("picked", { detail: p, bubbles: true }));
+  };
+  const render = () => {
+    list.innerHTML = items.length
+      ? items.map((p, i) => `<li role="option" data-i="${i}"><strong>${esc(p.name)}</strong> <span class="id">${esc(p.public_id)}</span><span class="u">${esc(CAT[p.category] || "")}${p.university ? " · " + esc(p.university) : ""}</span></li>`).join("")
+      : `<li class="none">No hay jugadores con ese nombre</li>`;
+    list.hidden = false;
+    idx = -1;
+  };
+  async function search() {
+    const q = inp.value.trim();
+    if (!q) return close();
+    const mine = ++seq;
+    try { items = await api("/players?limit=8&search=" + encodeURIComponent(q)); } catch (e) { return; }
+    if (mine === seq) render();
+  }
+  inp.addEventListener("input", () => { delete inp.dataset.id; clearTimeout(timer); timer = setTimeout(search, 140); });
+  inp.addEventListener("focus", () => { if (inp.value && !inp.dataset.id) search(); });
+  inp.addEventListener("blur", () => setTimeout(close, 130));
+  inp.addEventListener("keydown", (e) => {
+    if (list.hidden || !items.length) return;
+    if (e.key === "ArrowDown") { e.preventDefault(); idx = (idx + 1) % items.length; mark(); }
+    else if (e.key === "ArrowUp") { e.preventDefault(); idx = (idx - 1 + items.length) % items.length; mark(); }
+    else if (e.key === "Enter" && idx >= 0) { e.preventDefault(); pick(items[idx]); }
+    else if (e.key === "Enter" && items.length === 1) { e.preventDefault(); pick(items[0]); }
+    else if (e.key === "Escape") close();
+  });
+  list.addEventListener("mousedown", (e) => {
+    const li = e.target.closest("li[data-i]");
+    if (li) { e.preventDefault(); pick(items[+li.dataset.i]); }
+  });
+}
+const initAC = (root = document) => $$("input.ac-in:not([data-ac])", root).forEach(setupAC);
+function acRead(inp, required = true) {
+  if (inp.dataset.id) return inp.dataset.id;
+  const v = inp.value.trim();
+  if (!v) { if (required) throw new Error("Falta elegir un jugador"); return null; }
+  if (/^dom-\d+$/i.test(v)) return v.toUpperCase();
+  throw new Error(`Elige a "${v}" de la lista de sugerencias (aparece al escribir su nombre o apellido)`);
+}
+const acClear = (inp) => { inp.value = ""; delete inp.dataset.id; };
+
+/* ===================================================================== pestañas */
+function showTab(name) {
+  $$("#tabs button").forEach((b) => b.classList.toggle("active", b.dataset.tab === name));
+  ["ranking", "news", "social", "players", "comps", "match"].forEach((t) => ($("#tab-" + t).hidden = t !== name));
+  if (name === "ranking") loadRanking();
+  if (name === "news") loadNews();
+  if (name === "social") loadSocial();
+  if (name === "comps") { state.compId ? loadComp() : loadComps(); }
+  if (name === "match") { loadMatchForm(); loadFree(); }
+}
+$("#tabs").addEventListener("click", (e) => { const b = e.target.closest("button[data-tab]"); if (b) showTab(b.dataset.tab); });
+
+/* ===================================================================== datos generales */
+async function loadMeta() {
+  const meta = await api("/meta");
+  state.formats = meta.formats;
+  state.uniTop = meta.universities || [];
+  if (meta.instagram) { $("#igTop").href = meta.instagram.url; $("#igBtn").href = meta.instagram.url; }
+  const catOpts = meta.categories.map((c) => `<option value="${c}">${CAT[c] || c}</option>`).join("");
+  $("#rkCat").innerHTML = `<option value="">Todas las categorías</option>` + catOpts;
+  $("#plCat").innerHTML = catOpts; $("#plCat").value = "estudiante";
+  $("#dpCat").innerHTML = catOpts;
+  $("#cFormat").innerHTML = meta.formats.map((f) => `<option value="${f.value}">${esc(f.label)}</option>`).join("");
+  $("#cFormat").value = "suizo_final";
+  syncCreateForm();
+}
+async function loadUniversities() {
+  state.universities = await api("/universities");
+  // Las 20 universidades más conocidas (siempre disponibles) + las que ya están en la base de datos
+  const top = state.uniTop || [], known = new Set(top.map((u) => u.value));
+  $("#uniList").innerHTML = top.map((u) => `<option value="${esc(u.value)}" label="${esc(u.label)}">`).join("") +
+    state.universities.filter((u) => !known.has(u)).map((u) => `<option value="${esc(u)}">`).join("");
+  const cur = $("#rkUni").value;
+  $("#rkUni").innerHTML = `<option value="">Todas las universidades</option>` + state.universities.map((u) => `<option>${esc(u)}</option>`).join("");
+  $("#rkUni").value = cur;
+}
+
+
+/* ===================================================================== novedades (público) */
+const longDate = (iso) => {
+  const t = new Date(iso + "T00:00:00").toLocaleDateString("es-VE", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
+  return t.charAt(0).toUpperCase() + t.slice(1);
+};
+function feedItem(i) {
+  if (i.type === "match") {
+    const pair = (names) => esc(names.join(" / "));
+    const draw = i.winner === "D";
+    const row = (names, pts, win) => `<div class="feed-row ${draw ? "d" : win ? "w" : "l"}"><span><span class="tag">${draw ? "Empate" : win ? "Ganó" : "Perdió"}</span> ${pair(names)}</span><span class="sc">${pts}</span></div>`;
+    const first = i.winner === "B" ? "B" : "A";
+    const a = [i.team_a, i.points_a, i.winner === "A"], b = [i.team_b, i.points_b, i.winner === "B"];
+    const [x, y] = first === "A" ? [a, b] : [b, a];
+    const where = i.competition_id
+      ? `<button class="link" data-act="comp-open" data-id="${i.competition_id}">${esc(i.competition_name)}</button> · ${esc(i.stage_label)}`
+      : esc(i.stage_label);
+    return `<div class="feed-item"><div class="meta">${where}${i.tiebreak_final ? " · la final solo suma la victoria al campeón" : ""}</div>${row(...x)}${row(...y)}</div>`;
+  }
+  if (i.type === "tournament_finished" || i.type === "tournament_active") {
+    const fin = i.type === "tournament_finished";
+    const pod = i.podium.map((p) => `<div class="feed-row"><span><span class="tag">${PLACE[p.place] || p.place + ".º"}</span> ${esc(p.name)}</span></div>`).join("");
+    return `<div class="feed-item"><div class="meta"><span class="feed-badge">${fin ? "Torneo terminado" : "Torneo en juego"}</span>
+      <button class="link" data-act="comp-open" data-id="${i.id}"><strong>${esc(i.name)}</strong></button> · ${esc(i.format_label)}${i.location ? " · " + esc(i.location) : ""}</div>
+      ${pod}${fin ? "" : `<div class="meta">Posiciones provisionales</div>`}</div>`;
+  }
+  if (i.type === "social") {
+    const link = safeUrl(i.link);
+    return `<div class="feed-item"><div class="feed-social">${i.image_url ? `<img class="thumb" src="${esc(i.image_url)}" alt="" loading="lazy">` : ""}
+      <div><div class="meta"><span class="feed-badge">Instagram</span>${i.title ? `<strong>${esc(i.title)}</strong>` : "@dominoucv"}</div>
+      <div>${esc(i.summary)}</div>${link ? `<div class="meta"><a href="${esc(link)}" target="_blank" rel="noopener noreferrer">Ver publicación</a></div>` : ""}</div></div></div>`;
+  }
+  if (i.type === "players_joined") {
+    const rest = i.count - i.names.length;
+    return `<div class="feed-item"><div class="meta"><span class="feed-badge">Jugadores nuevos</span>${i.count} ${i.count === 1 ? "se registró" : "se registraron"}: ${i.names.map(esc).join(", ")}${rest > 0 ? ` y ${rest} más` : ""}</div></div>`;
+  }
+  return "";
+}
+async function loadNews() {
+  const items = await api("/feed?limit=60");
+  if (!items.length) { $("#newsFeed").innerHTML = `<div class="empty">Todavía no hay novedades. Cuando se registren partidas o torneos aparecerán aquí.</div>`; return; }
+  let html = "", day = null;
+  for (const i of items) {
+    if (i.date !== day) { day = i.date; html += `<h3 class="feed-day">${esc(longDate(day))}</h3>`; }
+    html += feedItem(i);
+  }
+  $("#newsFeed").innerHTML = html;
+}
+
+
+/* ===================================================================== redes (Instagram) */
+const safeUrl = (u) => (/^https?:\/\//i.test(u || "") ? u : "");
+const spState = { id: null, image: undefined };  // image: undefined = sin cambios, null = quitar, "data:..." = nueva
+function resetSocialForm() {
+  spState.id = null; spState.image = undefined;
+  ["#spTitle", "#spSummary2", "#spLink"].forEach((q) => ($(q).value = ""));
+  $("#spDate").value = todayStr(); $("#spFile").value = "";
+  $("#spPreviewRow").hidden = true; $("#spSave").textContent = "Publicar"; $("#spSummary").textContent = "Agregar publicación";
+}
+// Reduce la imagen en el navegador (máx. 1080 px, JPEG) antes de enviarla
+function readImage(file) {
+  return new Promise((resolve, reject) => {
+    if (!/^image\/(jpeg|png|webp)$/.test(file.type)) return reject(new Error("La imagen debe ser JPG, PNG o WEBP"));
+    const url = URL.createObjectURL(file), img = new Image();
+    img.onload = () => {
+      const k = Math.min(1, 1080 / Math.max(img.width, img.height));
+      const cv = document.createElement("canvas");
+      cv.width = Math.round(img.width * k); cv.height = Math.round(img.height * k);
+      const ctx = cv.getContext("2d"); ctx.fillStyle = "#fff"; ctx.fillRect(0, 0, cv.width, cv.height); ctx.drawImage(img, 0, 0, cv.width, cv.height);
+      URL.revokeObjectURL(url); resolve(cv.toDataURL("image/jpeg", 0.85));
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error("No se pudo leer la imagen")); };
+    img.src = url;
+  });
+}
+$("#spFile").addEventListener("change", run(async () => {
+  const f = $("#spFile").files[0];
+  if (!f) return;
+  spState.image = await readImage(f);
+  $("#spPreview").src = spState.image; $("#spPreviewRow").hidden = false;
+}));
+ACT["post-noimg"] = () => { spState.image = null; $("#spFile").value = ""; $("#spPreviewRow").hidden = true; };
+ACT["post-cancel"] = () => { resetSocialForm(); $("#spForm").open = false; };
+ACT["post-save"] = async () => {
+  const summary = $("#spSummary2").value.trim();
+  if (!summary) throw new Error("Escribe el resumen de la publicación");
+  const body = { posted_on: $("#spDate").value || null, title: $("#spTitle").value.trim() || null, summary, link: $("#spLink").value.trim() || null };
+  if (spState.id) {
+    if (typeof spState.image === "string") body.image_data = spState.image;
+    if (spState.image === null) body.remove_image = true;
+    await send("PATCH", "/social/" + spState.id, body);
+    toast("Publicación actualizada");
+  } else {
+    if (typeof spState.image === "string") body.image_data = spState.image;
+    await send("POST", "/social", body);
+    toast("Publicación agregada");
+  }
+  resetSocialForm(); $("#spForm").open = false;
+  await refreshAll();
+};
+ACT["post-edit"] = (el) => {
+  const p = state.posts.find((x) => x.id === +el.dataset.id);
+  if (!p) return;
+  resetSocialForm();
+  spState.id = p.id;
+  $("#spDate").value = p.posted_on; $("#spTitle").value = p.title || ""; $("#spSummary2").value = p.summary; $("#spLink").value = p.link || "";
+  if (p.image_url) { $("#spPreview").src = p.image_url; $("#spPreviewRow").hidden = false; }
+  $("#spSave").textContent = "Guardar cambios"; $("#spSummary").textContent = "Editando publicación";
+  $("#spForm").open = true; $("#spForm").scrollIntoView({ behavior: "smooth", block: "start" });
+};
+ACT["post-del"] = async (el) => {
+  if (!confirm("¿Eliminar esta publicación de la sección Redes?")) return;
+  await send("DELETE", "/social/" + el.dataset.id);
+  toast("Publicación eliminada");
+  await refreshAll();
+};
+async function loadSocial() {
+  state.posts = await api("/social?limit=100");
+  if (!state.posts.length) {
+    $("#postsBox").innerHTML = `<div class="empty">Todavía no hay publicaciones cargadas. Usa «Agregar publicación» para añadir lo que se publicó en Instagram (imagen y resumen del día).</div>`;
+    return;
+  }
+  let html = "", day = null;
+  for (const p of state.posts) {
+    if (p.posted_on !== day) { if (day) html += "</div>"; day = p.posted_on; html += `<h3 class="feed-day">${esc(longDate(day))}</h3><div class="posts">`; }
+    const link = safeUrl(p.link);
+    html += `<article class="post">${p.image_url ? `<img src="${esc(p.image_url)}" alt="${esc(p.title || "Publicación del " + p.posted_on)}" loading="lazy">` : ""}
+      <div class="pb">${p.title ? `<h4>${esc(p.title)}</h4>` : ""}<p>${esc(p.summary)}</p>
+        <div class="acts">${link ? `<a class="btn sm" href="${esc(link)}" target="_blank" rel="noopener noreferrer">Ver en Instagram</a>` : ""}
+          <button class="btn ghost sm" data-act="post-edit" data-id="${p.id}">Editar</button><button class="btn danger sm" data-act="post-del" data-id="${p.id}">Eliminar</button></div></div></article>`;
+  }
+  $("#postsBox").innerHTML = html + "</div>";
+}
+
+/* ===================================================================== ranking */
+async function loadRanking() {
+  const q = new URLSearchParams({ min_games: $("#rkMin").value || 0 });
+  if ($("#rkCity").value.trim()) q.set("city", $("#rkCity").value.trim());
+  if ($("#rkCat").value) q.set("category", $("#rkCat").value);
+  if ($("#rkUni").value) q.set("university", $("#rkUni").value);
+  const rows = await api("/ranking?" + q);
+  $("#rkTable").innerHTML = rows.length
+    ? `<tr><th>#</th><th>Jugador</th><th>Universidad</th><th class="num">ELO</th><th class="num">PJ</th><th class="num" title="Ganadas-Empatadas-Perdidas">G-E-P</th><th class="num" title="Puntos a favor / en contra">PF / PC</th></tr>` +
+      rows.map((r) => `<tr class="${r.position <= 3 ? "top3" : ""}"><td>${r.position}</td>
+        <td class="wrap"><button class="link" data-act="profile" data-id="${esc(r.public_id)}">${esc(r.name)}</button> <span class="id">${esc(r.public_id)}</span><br>
+          <span class="chip k-${esc(r.category)}">${esc(CAT[r.category] || r.category)}</span>${r.provisional ? '<span class="chip">provisional</span>' : ""}</td>
+        <td>${esc(uniText(r))}</td><td class="num"><strong>${fmt(r.rating)}</strong>${r.rating_pending ? `<span class="pend" title="Cambio de ELO de un torneo en curso: se suma cuando el torneo termine">${r.rating_pending > 0 ? "+" : ""}${r.rating_pending.toFixed(1)} en torneo</span>` : ""}</td><td class="num">${r.games_played}</td>
+        <td class="num">${r.wins}-${r.draws}-${r.losses}</td><td class="num">${r.points_for} / ${r.points_against}</td></tr>`).join("")
+    : `<tr><td><div class="empty">Todavía no hay jugadores con esos filtros. Crea jugadores en la pestaña Jugadores.</div></td></tr>`;
+}
+$("#rkGo").onclick = run(loadRanking);
+
+/* ===================================================================== jugadores */
+function syncAffiliation(catSel, uniInp) {
+  const ext = catSel.value === "externo", pending = catSel.value === "sin_definir";
+  uniInp.disabled = ext;
+  if (ext) uniInp.value = "";
+  uniInp.placeholder = ext ? "No aplica: no pertenece a la universidad"
+    : pending ? "Opcional: complétala cuando la sepas" : "Ej. UCV, USB, ULA…";
+}
+$("#plCat").addEventListener("change", () => syncAffiliation($("#plCat"), $("#plUni")));
+$("#dpCat").addEventListener("change", () => syncAffiliation($("#dpCat"), $("#dpUni")));
+
+$("#plCreate").onclick = run(async () => {
+  const p = await send("POST", "/players", {
+    name: $("#plName").value, category: $("#plCat").value, university: $("#plUni").value || null,
+    career: $("#plCareer").value || null, city: $("#plCity").value || null, country: $("#plCountry").value || null,
+  });
+  toast(`Jugador creado: ${p.name} (ID ${p.public_id})`);
+  $("#plName").value = ""; $("#plCareer").value = ""; $("#plName").focus();
+  loadUniversities();
+  findPlayers();
+});
+
+async function findPlayers() {
+  const q = new URLSearchParams({ limit: 100 });
+  if ($("#plSearch").value.trim()) q.set("search", $("#plSearch").value.trim());
+  if ($("#plInactive").checked) q.set("include_inactive", "true");
+  const rows = await api("/players?" + q);
+  $("#plTable").innerHTML = rows.length
+    ? `<tr><th>ID</th><th>Jugador</th><th>Universidad</th><th>Ciudad</th><th class="num">ELO</th><th></th></tr>` +
+      rows.map((r) => `<tr style="${r.active ? "" : "opacity:.6"}"><td class="id">${esc(r.public_id)}</td>
+        <td class="wrap"><button class="link" data-act="profile" data-id="${esc(r.public_id)}">${esc(r.name)}</button>
+          <span class="chip k-${esc(r.category)}">${esc(CAT[r.category])}</span>${r.active ? "" : '<span class="chip">eliminado</span>'}</td>
+        <td>${esc(uniText(r))}${r.career ? `<br><span class="muted small">${esc(r.career)}</span>` : ""}</td><td>${esc(r.city || "")}</td><td class="num">${fmt(r.rating)}</td>
+        <td style="text-align:right">${r.active
+          ? `<button class="btn ghost sm" data-act="player-edit" data-id="${esc(r.public_id)}">Editar</button> <button class="btn danger sm" data-act="player-del" data-id="${esc(r.public_id)}" data-name="${esc(r.name)}">Eliminar</button>`
+          : `<button class="btn ghost sm" data-act="player-restore" data-id="${esc(r.public_id)}">Restaurar</button>`}</td></tr>`).join("")
+    : `<tr><td><div class="empty">No se encontraron jugadores.</div></td></tr>`;
+}
+$("#plFind").onclick = run(findPlayers);
+$("#plInactive").onchange = run(findPlayers);
+$("#plSearch").addEventListener("keydown", (e) => { if (e.key === "Enter") run(findPlayers)(); });
+
+ACT["profile"] = (el) => openProfile(el.dataset.id);
+ACT["player-edit"] = async (el) => {
+  const p = await api("/players/" + el.dataset.id);
+  $("#dpId").textContent = p.public_id;
+  $("#dpName").value = p.name; $("#dpCat").value = p.category; $("#dpUni").value = p.university || "";
+  $("#dpCareer").value = p.career || ""; $("#dpCity").value = p.city || ""; $("#dpCountry").value = p.country || "";
+  syncAffiliation($("#dpCat"), $("#dpUni")); $("#dpUni").value = p.university || "";
+  $("#dlgPlayer").showModal();
+};
+$("#dlgPlayer").addEventListener("close", run(async () => {
+  if ($("#dlgPlayer").returnValue !== "ok") return;
+  await send("PATCH", "/players/" + $("#dpId").textContent, {
+    name: $("#dpName").value, category: $("#dpCat").value, university: $("#dpUni").value || null,
+    career: $("#dpCareer").value || null, city: $("#dpCity").value || null, country: $("#dpCountry").value || null,
+  });
+  toast("Jugador actualizado");
+  await refreshAll();
+}));
+ACT["player-del"] = async (el) => {
+  if (!confirm(`¿Eliminar a ${el.dataset.name}?\n\nSi ya jugó partidas, se archiva: deja de aparecer en el ranking y las búsquedas, pero su historial se conserva.`)) return;
+  const r = await send("DELETE", "/players/" + el.dataset.id);
+  toast(r.result === "deleted" ? "Jugador eliminado" : "Jugador archivado: tenía partidas, su historial se conserva");
+  if (state.profileId === el.dataset.id) { state.profileId = null; $("#plProfile").hidden = true; }
+  await refreshAll();
+};
+ACT["player-restore"] = async (el) => {
+  await send("PATCH", "/players/" + el.dataset.id, { active: true });
+  toast("Jugador restaurado");
+  await refreshAll();
+};
+
+async function openProfile(id, jump = true) {
+  state.profileId = id;
+  if (jump) showTab("players");
+  const p = await api("/players/" + id);
+  const box = $("#plProfile");
+  box.hidden = false;
+  const stat = (v, l) => `<div class="stat"><b>${v}</b><span>${l}</span></div>`;
+  box.innerHTML = `<div class="head"><h2>${esc(p.name)} <span class="id">${esc(p.public_id)}</span></h2>
+      <span><span class="chip k-${esc(p.category)}">${esc(CAT[p.category])}</span>${p.active ? "" : '<span class="chip">eliminado</span>'}${p.provisional ? '<span class="chip">ELO provisional</span>' : ""}</span></div>
+    <p class="muted" style="margin:0">${esc(p.university || (p.category === "sin_definir" ? "Universidad sin definir" : "No pertenece a la universidad"))}${p.career ? " · " + esc(p.career) : ""}${p.city ? " · " + esc(p.city) : ""}${p.country ? " (" + esc(p.country) + ")" : ""}</p>
+    <div class="stats">
+      ${stat(fmt(p.rating), "ELO")}${p.rating_pending ? stat((p.rating_pending > 0 ? "+" : "") + p.rating_pending.toFixed(1), "ELO pendiente (torneo en curso)") : ""}${stat(p.rank ? "#" + p.rank : "—", "Puesto general")}${stat(fmt(p.peak_rating), "ELO máximo")}
+      ${stat(p.games_played, "Partidas")}${stat(p.wins, "Ganadas")}${stat(p.draws, "Empatadas")}${stat(p.losses, "Perdidas")}
+      ${stat(p.points_for, "Puntos a favor")}${stat(p.points_against, "Puntos en contra")}${stat((p.points_for - p.points_against > 0 ? "+" : "") + (p.points_for - p.points_against), "Diferencia")}
+    </div>
+    <h3>Ligas y torneos</h3>
+    ${p.competitions.length ? `<div class="table-wrap"><table><tr><th>Fecha</th><th>Nombre</th><th>Modalidad</th><th>Sede</th><th>Resultado</th></tr>` +
+      p.competitions.map((c) => `<tr><td>${dateEs(c.start_date)}</td><td class="wrap"><button class="link" data-act="comp-open" data-id="${c.id}">${esc(c.name)}</button> <span class="chip">${c.kind === "liga" ? "Liga" : "Torneo"}</span></td>
+        <td class="wrap">${esc(c.format_label)}</td><td class="wrap">${esc(c.location || "—")}</td>
+        <td>${c.place ? `<strong>${PLACE[c.place] || c.place + ".º lugar"}</strong>` : `<span class="muted">${esc(STATUS[c.status])}</span>`}</td></tr>`).join("") + `</table></div>`
+      : `<div class="empty">Todavía no participa en ligas o torneos.</div>`}
+    <h3>Últimas partidas</h3>
+    ${p.recent_matches.length ? `<div class="table-wrap"><table><tr><th>Fecha</th><th>Pareja A</th><th class="num">Marcador</th><th>Pareja B</th><th>Dónde</th><th class="num">ELO</th><th></th></tr>` +
+      p.recent_matches.map((m) => {
+        const me = [...m.team_a, ...m.team_b].find((x) => x.public_id === p.public_id);
+        const names = (t) => t.map((x) => esc(x.name)).join(" / ");
+        return `<tr><td>${dateEs(m.played_at)}</td><td class="wrap">${names(m.team_a)}</td><td class="num"><strong>${m.points_a}–${m.points_b}</strong></td><td class="wrap">${names(m.team_b)}</td>
+          <td class="wrap">${esc(m.competition_name || "Amistosa")}</td><td class="num">${me ? sign(me.delta) : ""}</td>
+          <td><button class="btn ghost sm" data-act="match-edit" data-id="${m.id}" data-pa="${m.points_a}" data-pb="${m.points_b}" data-date="${esc(m.played_at)}">Corregir</button></td></tr>`;
+      }).join("") + `</table></div>` : `<div class="empty">Sin partidas todavía.</div>`}`;
+  if (jump) box.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+/* ===================================================================== corregir resultado (todas las partidas) */
+let editingMatch = null;
+ACT["match-edit"] = (el) => {
+  editingMatch = el.dataset.id;
+  $("#drA").value = el.dataset.pa; $("#drB").value = el.dataset.pb; $("#drDate").value = el.dataset.date || todayStr();
+  $("#drInfo").textContent = `Partida #${el.dataset.id}. Todos los puntajes son válidos, incluido el empate (salvo en eliminación directa).`;
+  $("#dlgResult").showModal();
+};
+$("#dlgResult").addEventListener("close", run(async () => {
+  if ($("#dlgResult").returnValue !== "ok") return;
+  await send("PUT", `/matches/${editingMatch}/result`, { points_a: +$("#drA").value, points_b: +$("#drB").value, played_at: $("#drDate").value || null });
+  toast("Resultado actualizado y ELO recalculado");
+  await refreshAll();
+}));
+ACT["match-del"] = async (el) => {
+  if (!confirm("¿Eliminar esta partida? El ELO y las estadísticas de los jugadores se recalculan.")) return;
+  await send("DELETE", "/matches/" + el.dataset.id);
+  toast("Partida eliminada");
+  await refreshAll();
+};
+
+async function refreshAll() {
+  await Promise.all([
+    loadUniversities(),
+    !$("#tab-ranking").hidden ? loadRanking() : null,
+    !$("#tab-news").hidden ? loadNews() : null,
+    !$("#tab-social").hidden ? loadSocial() : null,
+    !$("#tab-players").hidden ? findPlayers() : null,
+    state.profileId ? openProfile(state.profileId, false).catch(() => { $("#plProfile").hidden = true; }) : null,
+    !$("#tab-comps").hidden ? (state.compId ? loadComp() : loadComps()) : null,
+    !$("#tab-match").hidden ? loadFree() : null,
+  ]);
+}
+
+/* ===================================================================== ligas y torneos: lista y creación */
+function syncCreateForm() {
+  const f = $("#cFormat").value;
+  $("#cSwissBox").hidden = !["suizo", "suizo_final", "suizo_gran_final"].includes(f);
+  $("#cTieBox").hidden = f !== "suizo_gran_final";
+  $("#cGroupsBox").hidden = f !== "grupos_eliminacion";
+  $("#cQualBox").hidden = !["suizo_final", "grupos_eliminacion"].includes(f);
+  if (f === "suizo_final") {
+    $("#cQualLbl").textContent = "Clasifican a la fase final";
+    $("#cQual").innerHTML = `<option value="4">Los 4 mejores (semifinales)</option><option value="8">Los 8 mejores (cuartos)</option>`;
+  } else if (f === "grupos_eliminacion") {
+    $("#cQualLbl").textContent = "Clasifican por grupo";
+    $("#cQual").innerHTML = [1, 2, 3, 4].map((n) => `<option value="${n}" ${n === 2 ? "selected" : ""}>${n} por grupo</option>`).join("");
+  }
+  $("#cHelp").textContent = FORMAT_HELP[f] || "";
+  const libre = f === "libre";
+  $("#cTeam").disabled = false;
+  $("#cKind").value = libre ? "liga" : $("#cKind").value;
+}
+$("#cFormat").addEventListener("change", syncCreateForm);
+$("#cDate").value = todayStr();
+
+$("#cCreate").onclick = run(async () => {
+  const f = $("#cFormat").value;
+  const body = {
+    name: $("#cName").value, kind: $("#cKind").value, format: f, location: $("#cLoc").value || null,
+    start_date: $("#cDate").value || null, team_size: +$("#cTeam").value,
+    points_per_win: +$("#cPW").value, points_per_draw: +$("#cPD").value, target_points: +$("#cTarget").value,
+  };
+  if (["suizo", "suizo_final", "suizo_gran_final"].includes(f) && $("#cSwiss").value) body.swiss_rounds = +$("#cSwiss").value;
+  if (f === "suizo_gran_final") body.final_only_on_tie = $("#cOnlyTie").checked;
+  if (f === "grupos_eliminacion") { body.groups_count = +$("#cGroups").value; body.qualifiers = +$("#cQual").value; }
+  if (f === "suizo_final") body.qualifiers = +$("#cQual").value;
+  const c = await send("POST", "/competitions", body);
+  toast(`Creado: ${c.name}`);
+  $("#cName").value = "";
+  $("#newComp").open = false;
+  state.compId = c.id;
+  await loadComp();
+});
+
+async function loadComps() {
+  state.compId = null;
+  $("#compDetail").hidden = true; $("#compList").hidden = false;
+  const list = await api("/competitions");
+  $("#cGrid").innerHTML = list.length
+    ? list.map((c) => `<button class="cc" data-act="comp-open" data-id="${c.id}">
+        <h3>${esc(c.name)}</h3>
+        <span class="chip">${c.kind === "liga" ? "Liga" : "Torneo"}</span><span class="chip s-${esc(c.status)}">${esc(STATUS[c.status])}</span>
+        <div class="meta">${esc(c.format_label)}<br>${c.location ? esc(c.location) + " · " : ""}${dateEs(c.start_date)}<br>
+        ${c.participants} ${c.format === "libre" ? "jugadores" : c.team_size === 2 ? "parejas" : "jugadores"}</div></button>`).join("")
+    : `<div class="empty" style="grid-column:1/-1">Aún no hay ligas ni torneos. Crea el primero arriba.</div>`;
+}
+ACT["comp-open"] = async (el) => { state.compId = +el.dataset.id; showTab("comps"); };
+
+/* ===================================================================== detalle de liga / torneo */
+const podiumHTML = (pod) => {
+  if (!pod.places.length) return `<div class="empty">El podio aparecerá cuando se jueguen las primeras partidas.</div>`;
+  return `<div class="podium">${pod.places.map((p) => `<div class="ptile"><div class="ptop">${pips(p.place, p.place === 1 ? "red" : "")}</div>
+      <div class="pbot"><span class="lbl">${PLACE[p.place] || p.place + ".º lugar"}</span><b>${esc(p.name)}</b>
+      ${p.players.length > 1 ? `<span class="muted small">${p.players.map((x) => esc(x.name)).join(" · ")}</span>` : ""}</div></div>`).join("")}</div>
+    ${pod.final ? "" : `<p class="muted small" style="margin-bottom:0">Podio provisional: se confirma al terminar.</p>`}`;
+};
+
+const tableHTML = (rows, { swiss = false, libre = false, finalists = new Set() } = {}) => {
+  if (!rows.length) return `<div class="empty">Sin datos todavía.</div>`;
+  const showElo = !libre && rows.some((r) => r.elo_delta != null);
+  const fin = (r) => (finalists.has(r.entry_id) ? '<em class="fin">finalistas</em>' : "");
+  const head = `<tr><th>#</th><th>${libre ? "Jugador" : "Participante"}</th><th class="num">PJ</th><th class="num">G</th><th class="num">E</th><th class="num">P</th><th class="num">PF</th><th class="num">PC</th><th class="num" title="Puntos a favor menos puntos en contra${swiss ? ' (desempata)' : ''}">${swiss ? "Average" : "Dif"}</th>${libre ? '<th class="num">ELO</th>' : ""}${showElo ? '<th class="num" title="Cambio de ELO acumulado en este torneo. Se suma al rating cuando el torneo termina">ELO ±</th>' : ""}<th class="num">Pts</th></tr>`;
+  return `<div class="table-wrap"><table>${head}${rows.map((r) => `<tr class="${r.position && r.position <= 3 ? "top3" : ""}"><td>${r.position ?? "—"}</td>
+    <td class="wrap"><strong>${esc(r.name)}</strong>${r.withdrawn ? ' <span class="chip">retirada</span>' : ""}${libre ? ` <span class="id">${esc(r.public_id)}</span>` : (r.players.length > 1 ? `<br><span class="muted small">${r.players.map((x) => esc(x.name)).join(" · ")}</span>` : "")}${fin(r)}</td>
+    <td class="num">${r.played ?? 0}</td><td class="num">${r.wins}</td><td class="num">${r.draws}</td><td class="num">${r.losses}</td>
+    <td class="num">${r.pf}</td><td class="num">${r.pa}</td><td class="num">${r.diff > 0 ? "+" : ""}${r.diff}</td>
+    ${libre ? `<td class="num">${fmt(r.elo)}</td>` : ""}${showElo ? `<td class="num">${sign(r.elo_delta)}</td>` : ""}<td class="num"><strong>${r.points}</strong></td></tr>`).join("")}</table></div>`;
+};
+
+function matchCard(m) {
+  const isFinal = state.compFormat === "suizo_gran_final" && /^Final/.test(m.title || "");
+  const sideName = (entry, label, win) => entry
+    ? `<span class="${win ? "win" : ""}">${esc(entry.name)}</span>${isFinal ? '<em class="fin">finalistas</em>' : ""}`
+    : `<span class="tbd">${esc(label || "Por definir")}</span>`;
+  const done = m.status === "valid";
+  const aWin = done && m.points_a > m.points_b, bWin = done && m.points_b > m.points_a;
+  if (m.status === "bye") {
+    return `<div class="match bye"><div class="side a">${m.entry_a ? esc(m.entry_a.name) : ""}${m.entry_b ? esc(m.entry_b.name) : ""}</div>
+      <div class="mid">${m.skipped ? `<span class="cap">${esc(m.title || "Final")} omitida</span><span class="small muted">No hubo empate por el primer lugar: el 1.º de la tabla es el campeón</span>` : `<span class="cap">Pase libre</span><span class="small muted">Cuenta como victoria</span>`}</div><div class="side"></div></div>`;
+  }
+  const disabled = !m.editable || m.locked;
+  const lockedTip = m.locked ? ` title="Hay partidas posteriores ya jugadas que dependen de esta. Corrígelas primero."` : "";
+  return `<div class="match" data-mid="${m.id}">
+    <div class="side a ${aWin ? "win" : ""}">${sideName(m.entry_a, m.a_label, aWin)}</div>
+    <div class="mid">
+      ${m.title ? `<span class="cap">${esc(m.title)}</span>` : ""}
+      <span class="score"${lockedTip}><input type="number" min="0" class="pa" aria-label="Puntos de ${esc(m.entry_a?.name || "A")}" value="${m.points_a ?? ""}" ${disabled ? "disabled" : ""}><span class="bar"></span><input type="number" min="0" class="pb" aria-label="Puntos de ${esc(m.entry_b?.name || "B")}" value="${m.points_b ?? ""}" ${disabled ? "disabled" : ""}></span>
+      ${m.editable ? `<span class="foot"><input type="date" class="pd" aria-label="Fecha" value="${esc(m.played_at || todayStr())}" ${m.locked ? "disabled" : ""}>
+        <button class="btn sm ${done ? "ghost" : "pip"}" data-act="save-result" data-id="${m.id}" ${m.locked ? "disabled" : ""}>${done ? "Corregir" : "Registrar"}</button></span>`
+        : `<span class="small muted">${m.entry_a || m.entry_b ? "Esperando rival" : "Por definir"}</span>`}
+    </div>
+    <div class="side ${bWin ? "win" : ""}">${sideName(m.entry_b, m.b_label, bWin)}</div></div>`;
+}
+
+ACT["save-result"] = async (el) => {
+  const card = el.closest(".match");
+  const pa = $(".pa", card).value, pb = $(".pb", card).value;
+  if (pa === "" || pb === "") throw new Error("Escribe los puntos de las dos parejas (puede ser cualquier cantidad)");
+  await send("PUT", `/matches/${el.dataset.id}/result`, { points_a: +pa, points_b: +pb, played_at: $(".pd", card).value || null });
+  toast("Resultado guardado");
+  await refreshAll();
+};
+
+async function loadComp() {
+  const d = await api("/competitions/" + state.compId);
+  const c = d.competition;
+  state.compFormat = c.format;
+  $("#compList").hidden = true;
+  const box = $("#compDetail");
+  box.hidden = false;
+  const libre = c.format === "libre";
+  const draft = c.status === "draft";
+  let html = `<p><button class="btn ghost" style="background:var(--ivory)" data-act="comp-back">← Todas las ligas y torneos</button></p>
+  <div class="card">
+    <div class="head"><h2>${esc(c.name)}</h2>
+      <span><span class="chip">${c.kind === "liga" ? "Liga" : "Torneo"}</span><span class="chip s-${esc(c.status)}">${esc(STATUS[c.status])}</span></span></div>
+    <p class="muted" style="margin:0 0 4px"><strong>${esc(c.format_label)}</strong> · ${c.team_size === 2 ? "Parejas" : "Individual"} · partidas a ${c.target_points} puntos</p>
+    <p class="muted" style="margin:0">Sede: <strong>${esc(c.location || "sin definir")}</strong> · Inicio: ${dateEs(c.start_date)}${c.season ? " · " + esc(c.season) : ""} · Victoria ${c.points_per_win} pts, empate ${c.points_per_draw} pt</p>
+    ${c.format === "suizo_gran_final" ? `<p class="muted small" style="margin:4px 0 0">${c.final_only_on_tie ? "La final entre el 1.º y el 2.º se juega solo si hay empate por el primer lugar." : "Después del suizo se juega una final entre el 1.º y el 2.º de la tabla."}</p>` : ""}
+    <div class="actions">
+      <button class="btn ghost sm" data-act="comp-edit">Editar datos</button>
+      <button class="btn danger sm" data-act="comp-del">Eliminar</button>
+      ${libre && c.status === "active" ? '<button class="btn sm" data-act="comp-finish">Cerrar liga</button>' : ""}
+      ${libre && c.status === "finished" ? '<button class="btn sm" data-act="comp-reopen">Reabrir liga</button>' : ""}
+    </div></div>
+  <div class="card"><div class="head"><h2>Top 3</h2></div>${podiumHTML(d.podium)}</div>`;
+
+  if (libre) {
+    html += `<div class="card"><h2>Jugadores inscritos (${d.members.length})</h2>
+      <div class="row"><span class="ac-slot" style="flex:1 1 280px"><input class="ac-in" id="memberIn" placeholder="Escribe nombre o apellido para inscribir"></span>
+        <button class="btn" data-act="member-add">Inscribir</button></div>
+      <div>${d.members.map((m) => `<span class="chip">${esc(m.name)}</span>`).join("") || '<span class="muted">Aún no hay jugadores inscritos.</span>'}</div></div>
+    <div class="card"><div class="head"><h2>Tabla de posiciones</h2><button class="btn pip sm" data-act="go-register" data-id="${c.id}">Registrar partida</button></div>${tableHTML(d.standings, { libre: true })}</div>
+    <div class="card"><h2>Partidas de la liga</h2>${d.recent_matches.length ? `<div class="table-wrap"><table><tr><th>Fecha</th><th>Pareja A</th><th class="num">Marcador</th><th>Pareja B</th><th></th></tr>` +
+      d.recent_matches.map((m) => `<tr><td>${dateEs(m.played_at)}</td><td class="wrap">${m.team_a.map((x) => esc(x.name)).join(" / ")}</td><td class="num"><strong>${m.points_a}–${m.points_b}</strong></td>
+        <td class="wrap">${m.team_b.map((x) => esc(x.name)).join(" / ")}</td><td style="text-align:right"><button class="btn ghost sm" data-act="match-edit" data-id="${m.id}" data-pa="${m.points_a}" data-pb="${m.points_b}" data-date="${esc(m.played_at)}">Corregir</button>
+        <button class="btn danger sm" data-act="match-del" data-id="${m.id}">Eliminar</button></td></tr>`).join("") + `</table></div>` : '<div class="empty">Aún no hay partidas en esta liga.</div>'}</div>`;
+  } else if (draft) {
+    html += `<div class="card"><h2>Participantes (${d.entries.length})</h2>
+      <div class="note">${esc(FORMAT_HELP[c.format])}</div>
+      <div class="row">
+        <span class="ac-slot" style="flex:1 1 220px"><input class="ac-in" id="eP1" placeholder="Jugador 1: escribe nombre o apellido"></span>
+        ${c.team_size === 2 ? '<span class="ac-slot" style="flex:1 1 220px"><input class="ac-in" id="eP2" placeholder="Jugador 2 (su pareja)"></span>' : ""}
+        ${c.team_size === 2 ? '<input id="eName" placeholder="Nombre de la pareja (opcional)" style="flex:1 1 180px">' : ""}
+        <button class="btn" data-act="entry-add">Inscribir</button></div>
+      ${d.entries.length ? `<div class="table-wrap"><table><tr><th>#</th><th>${c.team_size === 2 ? "Pareja" : "Jugador"}</th><th>Jugadores</th><th></th></tr>` +
+        d.entries.map((e, i) => `<tr><td>${i + 1}</td><td class="wrap"><strong>${esc(e.name)}</strong></td><td class="wrap">${e.players.map((p) => `${esc(p.name)} <span class="id">${esc(p.public_id)}</span>`).join(" · ")}</td>
+          <td style="text-align:right"><button class="btn danger sm" data-act="entry-del" data-id="${e.id}">Quitar</button></td></tr>`).join("") + `</table></div>` : '<div class="empty">Inscribe a los participantes. La siembra se hace sola, de mayor a menor ELO.</div>'}
+      <div class="actions"><button class="btn pip" data-act="comp-start" ${d.entries.length < 2 ? "disabled" : ""}>Iniciar ${c.kind === "liga" ? "liga" : "torneo"}</button></div></div>`;
+  } else {
+    if (d.swiss) {
+      const finalMatch = d.sections.flatMap((x) => x.matches).find((m) => m.title && /^Final/.test(m.title));
+      const finalists = new Set(c.format === "suizo_gran_final" && finalMatch && !finalMatch.skipped ? [finalMatch.entry_a?.id, finalMatch.entry_b?.id].filter(Boolean) : []);
+      html += `<div class="card"><div class="head"><h2>Clasificación suiza</h2><span class="muted">Ronda ${d.swiss.generated} de ${d.swiss.total}</span></div>
+        ${tableHTML(d.standings, { swiss: true, finalists })}
+        ${d.entries.some((e) => e.withdrawn) ? `<p class="muted small" style="margin:8px 0 0"><strong>Parejas retiradas</strong> (al final de la lista, sin puesto): se muestran con lo que jugaron antes de irse, y esas partidas cuentan para sus rivales.</p>` : ""}
+        <p class="muted small" style="margin:4px 0 0"><strong>ELO ±</strong>: como en FIDE, durante el torneo todas las partidas se calculan con el ELO que cada jugador tenía al empezar; el cambio se va acumulando y se suma al rating recién cuando el torneo termina${c.status === "finished" ? " (ya aplicado)" : ""}.</p>
+        ${c.format === "suizo_gran_final" ? `<p class="muted small" style="margin:4px 0 0">La final no cambia el average (no suma puntos a favor ni en contra) y no cuenta derrota al perdedor: solo suma la victoria al campeón.</p>` : ""}
+        ${d.swiss.can_next ? `<div class="actions"><button class="btn pip" data-act="next-round">Generar ronda ${d.swiss.generated + 1}</button></div>` :
+          (c.status === "active" && d.swiss.generated < d.swiss.total ? `<p class="muted small">Registra todos los resultados de la ronda ${d.swiss.generated} para generar la siguiente.</p>` : "")}</div>`;
+    }
+    if (d.groups.length) {
+      html += `<div class="card"><h2>Fase de grupos</h2><div class="grid2">${d.groups.map((g) => `<div><h3 style="margin-top:0">Grupo ${esc(g.label)}</h3>${tableHTML(g.rows)}</div>`).join("")}</div></div>`;
+    }
+    const phaseName = { swiss: "Partidas de la fase suiza", group: "Partidas de la fase de grupos",
+      ko: c.format === "eliminacion" ? "Llave de eliminación" : c.format === "doble_eliminacion" ? "Llaves" : c.format === "suizo_gran_final" ? "Final" : "Fase final" };
+    const phases = ["swiss", "group", "ko"].filter((p) => d.sections.some((s) => s.phase === p));
+    html += `<div class="card"><h2>Partidas</h2>` + phases.map((ph) => {
+      const secs = d.sections.filter((s) => s.phase === ph);
+      return `<div class="phase-title">${phaseName[ph]}</div>` + secs.map((s, i) => {
+        const open = s.matches.some((m) => m.status === "pending" && m.editable) || i === secs.length - 1 && ph === "swiss" || ph === "ko";
+        return `<details class="phase" ${open ? "open" : ""}><summary>${esc(s.title)}</summary>${s.matches.map(matchCard).join("")}</details>`;
+      }).join("");
+    }).join("") + `</div>`;
+  }
+  box.innerHTML = html;
+  initAC(box);
+}
+
+ACT["comp-back"] = () => { state.compId = null; loadComps(); };
+ACT["comp-start"] = async () => {
+  if (!confirm("¿Iniciar? Después no se podrán agregar ni quitar participantes.")) return;
+  await send("POST", `/competitions/${state.compId}/start`);
+  toast("¡Comenzó! Ya puedes registrar resultados.");
+  await loadComp();
+};
+ACT["next-round"] = async () => { await send("POST", `/competitions/${state.compId}/next-round`); toast("Ronda generada"); await loadComp(); };
+ACT["comp-finish"] = async () => { await send("POST", `/competitions/${state.compId}/finish`); toast("Liga cerrada: el top 3 es definitivo"); await loadComp(); };
+ACT["comp-reopen"] = async () => { await send("POST", `/competitions/${state.compId}/reopen`); toast("Liga reabierta"); await loadComp(); };
+ACT["comp-del"] = async () => {
+  if (!confirm("¿Eliminar esta liga o torneo con todas sus partidas?\nEl ELO de los jugadores se recalcula sin ellas. No se puede deshacer.")) return;
+  await send("DELETE", `/competitions/${state.compId}`);
+  toast("Eliminado");
+  state.compId = null;
+  await refreshAll();
+  await loadComps();
+};
+ACT["comp-edit"] = async () => {
+  const d = await api("/competitions/" + state.compId);
+  $("#dcName").value = d.competition.name; $("#dcLoc").value = d.competition.location || ""; $("#dcDate").value = d.competition.start_date || "";
+  $("#dlgComp").showModal();
+};
+$("#dlgComp").addEventListener("close", run(async () => {
+  if ($("#dlgComp").returnValue !== "ok") return;
+  await send("PATCH", `/competitions/${state.compId}`, { name: $("#dcName").value, location: $("#dcLoc").value || null, start_date: $("#dcDate").value || null });
+  toast("Datos actualizados");
+  await loadComp();
+}));
+ACT["member-add"] = async () => {
+  const inp = $("#memberIn");
+  await send("POST", `/competitions/${state.compId}/members`, { public_id: acRead(inp) });
+  toast("Jugador inscrito");
+  await loadComp();
+  $("#memberIn").focus();
+};
+ACT["entry-add"] = async () => {
+  const p1 = acRead($("#eP1"));
+  const p2 = $("#eP2") ? acRead($("#eP2")) : null;
+  await send("POST", `/competitions/${state.compId}/entries`, { players: p2 ? [p1, p2] : [p1], name: $("#eName") ? $("#eName").value || null : null });
+  toast("Inscrito");
+  await loadComp();
+  $("#eP1").focus();
+};
+ACT["entry-del"] = async (el) => { await send("DELETE", `/competitions/${state.compId}/entries/${el.dataset.id}`); await loadComp(); };
+ACT["go-register"] = (el) => { showTab("match"); setTimeout(() => { $("#mComp").value = el.dataset.id; }, 150); };
+
+/* ===================================================================== registrar partida libre */
+async function loadMatchForm() {
+  const list = await api("/competitions");
+  const cur = $("#mComp").value;
+  $("#mComp").innerHTML = `<option value="">Partida amistosa (sin liga)</option>` +
+    list.filter((c) => c.format === "libre" && c.status === "active").map((c) => `<option value="${c.id}">${esc(c.name)}${c.location ? " · " + esc(c.location) : ""}</option>`).join("");
+  $("#mComp").value = cur;
+  if (!$("#mDate").value) $("#mDate").value = todayStr();
+}
+$("#mSave").onclick = run(async () => {
+  const a = [acRead($("#mA1")), acRead($("#mA2"), false)].filter(Boolean);
+  const b = [acRead($("#mB1")), acRead($("#mB2"), false)].filter(Boolean);
+  if ($("#mPA").value === "" || $("#mPB").value === "") throw new Error("Escribe los puntos de las dos parejas (puede ser cualquier cantidad)");
+  const m = await send("POST", "/matches", {
+    team_a: a, team_b: b, points_a: +$("#mPA").value, points_b: +$("#mPB").value,
+    competition_id: $("#mComp").value ? +$("#mComp").value : null, played_at: $("#mDate").value || null,
+  });
+  const line = (t) => t.map((x) => `${esc(x.name)}: ${fmt(x.rating_before)} → <strong>${fmt(x.rating_after)}</strong> (${sign(x.delta)})`).join("<br>");
+  $("#mResult").innerHTML = `<div class="note"><strong>Partida guardada</strong> · ${dateEs(m.played_at)} · ${m.points_a}–${m.points_b}${m.points_a === m.points_b ? " (empate)" : ""}<br><br>
+    <strong>Pareja A</strong><br>${line(m.team_a)}<br><br><strong>Pareja B</strong><br>${line(m.team_b)}</div>`;
+  ["mA1", "mA2", "mB1", "mB2"].forEach((id) => acClear($("#" + id)));
+  $("#mPA").value = ""; $("#mPB").value = "";
+  $("#mA1").focus();
+  loadFree();
+});
+async function loadFree() {
+  const rows = await api("/matches?free_only=true&limit=20");
+  const names = (t) => t.map((x) => esc(x.name)).join(" / ");
+  $("#freeTable").innerHTML = rows.length
+    ? `<tr><th>Fecha</th><th>Liga</th><th>Pareja A</th><th class="num">Marcador</th><th>Pareja B</th><th></th></tr>` +
+      rows.map((m) => `<tr><td>${dateEs(m.played_at)}</td><td class="wrap">${esc(m.competition_name || "Amistosa")}</td><td class="wrap">${names(m.team_a)}</td>
+        <td class="num"><strong>${m.points_a}–${m.points_b}</strong></td><td class="wrap">${names(m.team_b)}</td>
+        <td style="text-align:right"><button class="btn ghost sm" data-act="match-edit" data-id="${m.id}" data-pa="${m.points_a}" data-pb="${m.points_b}" data-date="${esc(m.played_at)}">Corregir</button>
+        <button class="btn danger sm" data-act="match-del" data-id="${m.id}">Eliminar</button></td></tr>`).join("")
+    : `<tr><td><div class="empty">Todavía no hay partidas libres.</div></td></tr>`;
+}
+
+/* ===================================================================== inicio */
+initAC();
+syncAffiliation($("#plCat"), $("#plUni"));
+resetSocialForm();
+(async () => {
+  try {
+    await loadMeta();
+    await loadUniversities();
+    await loadRanking();
+    findPlayers();
+  } catch (e) { toast(e.message, true); }
+})();
+</script>
+</body>
+</html>
